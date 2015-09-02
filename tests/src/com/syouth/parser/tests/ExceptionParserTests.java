@@ -134,4 +134,29 @@ public class ExceptionParserTests extends TestCase {
             Assert.assertTrue("Can't parse expression " + e.getMessage(), false);
         }
     }
+
+    public void testPercents() {
+        try {
+            mExpressionParser.setExpression("2 + 50% ");
+            Assert.assertEquals(3., mExpressionParser.parseExpression());
+            mExpressionParser.setExpression("2 + 2 + 50% ");
+            Assert.assertEquals(5., mExpressionParser.parseExpression());
+            mExpressionParser.setExpression("2 * 2 + 50% ");
+            Assert.assertEquals(6., mExpressionParser.parseExpression());
+            mExpressionParser.setExpression("2 + 50% + 1 ");
+            Assert.assertEquals(4., mExpressionParser.parseExpression());
+        } catch (ParseException e) {
+            Assert.assertTrue("Can't parse expression " + e.getMessage(), false);
+        }
+    }
+
+    public void testWrongExpressions() {
+        try {
+            mExpressionParser.setExpression("sqrt (25)");
+            Assert.assertEquals(3., mExpressionParser.parseExpression());
+            Assert.assertTrue(false);
+        } catch (ParseException e) {
+
+        }
+    }
 }

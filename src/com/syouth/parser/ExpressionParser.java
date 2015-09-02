@@ -39,8 +39,8 @@ public class ExpressionParser {
 
     /**
      * Grammar:
-     * expression = ["+"|"-"] term [{['+'|'-'] expression}]
-     * term = factor ['^' power][{('*'|'/') term}]
+     * expression = ["+"|"-"] term [{['+'|'-'] expression['%'['+'|'-' expression]]}]
+     * term = factor ['^' power][{('*'|'/') term['%']}]
      * power = (number | '('expression')')['^'power]
      * factor = number | '('expression')' | 'sqrt{digit}('expression')'
      */
@@ -57,21 +57,42 @@ public class ExpressionParser {
         } else {
             answer = parseTerm();
         }
+        double expressionVal = 0.;
         if (!isOver()) {
+            boolean hasExpression = false;
             if (checkIfNextDigitPlusOrMinus()) {
                 Character nextChar = nextChar();
                 switch (nextChar) {
                     case '-':
-                        answer -= parseExpressionInternal();
+                        expressionVal = -parseExpressionInternal();
+                        hasExpression = true;
                         break;
                     case '+':
-                        answer += parseExpressionInternal();
+                        expressionVal = parseExpressionInternal();
+                        hasExpression = true;
                         break;
                 }
             }
+            eatSpaces();
+            if (!isOver() && hasExpression && checkIfNextCharOneOf(new char[] {'%'})) {
+                nextChar();
+                expressionVal = expressionVal * answer / 100;
+            }
+        }
+        eatSpaces();
+        if (!isOver()) {
+            if (checkIfNextDigitPlusOrMinus()) {
+                char next = nextChar();
+                eatSpaces();
+                int sign = 1;
+                if (next == '-') {
+                    sign = -1;
+                }
+                expressionVal += sign * parseExpressionInternal();
+            }
         }
 
-        return answer;
+        return answer + expressionVal;
     }
 
     private double parsePower() throws ParseException {
@@ -150,10 +171,10 @@ public class ExpressionParser {
         }
         StringBuilder builder = new StringBuilder();
 
-        do {
+        while (checkIfNextDigitPart() ||
+                checkIfNextCharOneOf(new char[] {'.'})) {
             builder.append(nextChar());
-        } while (checkIfNextDigitPart() ||
-                checkIfNextCharOneOf(new char[] {'.'}));
+        }
 
         if (builder.length() == 0) {
             throw new ParseException("No valid number at " + mCurexpressionPos);
@@ -218,7 +239,7 @@ public class ExpressionParser {
 
     private boolean isNextRoot() {
         int i = mCurexpressionPos + 1;
-        if (i >= mExpression.length()) {
+        if (i >= mExpression.length() || i + 4 >= mExpression.length()) {
             return false;
         }
         return mExpression.subSequence(i, i + 4).
