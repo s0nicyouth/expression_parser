@@ -40,8 +40,8 @@ public class ExpressionParser {
     /**
      * Grammar:
      * expression = ["+"|"-"] term [{['+'|'-'] expression['%'['+'|'-' expression]]}]
-     * term = factor ['^' power][{('*'|'/') term['%']}]
-     * power = (number | '('expression')')['^'power]
+     * term = ['+'|'-']factor ['^' power][{('*'|'/') term['%']}]
+     * power = ['+'|'-'](number | '('expression')')['^'power]
      * factor = number | '('expression')' | 'sqrt{digit}('expression')'
      */
     private double parseExpressionInternal() throws ParseException {
@@ -58,38 +58,19 @@ public class ExpressionParser {
             answer = parseTerm();
         }
         double expressionVal = 0.;
-        if (!isOver()) {
-            boolean hasExpression = false;
-            if (checkIfNextDigitPlusOrMinus()) {
-                Character nextChar = nextChar();
-                switch (nextChar) {
-                    case '-':
-                        expressionVal = -parseExpressionInternal();
-                        hasExpression = true;
-                        break;
-                    case '+':
-                        expressionVal = parseExpressionInternal();
-                        hasExpression = true;
-                        break;
-                }
-            }
+        if (!isOver() &&
+                checkIfNextDigitPlusOrMinus()) {
+            expressionVal = parseExpressionInternal();
             eatSpaces();
-            if (!isOver() && hasExpression && checkIfNextCharOneOf(new char[] {'%'})) {
+            if (!isOver() && checkIfNextCharOneOf(new char[] {'%'})) {
                 nextChar();
                 expressionVal = expressionVal * answer / 100;
             }
         }
         eatSpaces();
-        if (!isOver()) {
-            if (checkIfNextDigitPlusOrMinus()) {
-                char next = nextChar();
-                eatSpaces();
-                int sign = 1;
-                if (next == '-') {
-                    sign = -1;
-                }
-                expressionVal += sign * parseExpressionInternal();
-            }
+        if (!isOver() &&
+                checkIfNextDigitPlusOrMinus()) {
+            expressionVal += parseExpressionInternal();
         }
 
         return answer + expressionVal;
@@ -188,11 +169,18 @@ public class ExpressionParser {
         if (isOver()) {
             throw new ParseException("Unexpected end Of expression at " + mCurexpressionPos);
         }
+        int sign = 1;
+        if (checkIfNextDigitPlusOrMinus()) {
+            if (nextChar().equals('-')) {
+                sign = -1;
+            }
+            eatSpaces();
+        }
         if (checkIfNextDigitPart()) {
-            return parseNumber();
+            return sign * parseNumber();
         } else if (isNextCharOpeningBracket()) {
             nextChar();
-            double expr = parseExpressionInternal();
+            double expr = sign * parseExpressionInternal();
             eatSpaces();
             if (isOver() ||
                     !nextChar().equals(')')) {
@@ -201,7 +189,7 @@ public class ExpressionParser {
                 return expr;
             }
         } else if (isNextKnownFunction()) {
-            return parseKnownFunction();
+            return sign * parseKnownFunction();
         } else {
             throw new ParseException("Unexpected factor at " + mCurexpressionPos);
         }

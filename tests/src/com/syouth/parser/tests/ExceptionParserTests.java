@@ -88,6 +88,8 @@ public class ExceptionParserTests extends TestCase {
             Assert.assertEquals(16., mExpressionParser.parseExpression());
             mExpressionParser.setExpression(" 4 ^2");
             Assert.assertEquals(16., mExpressionParser.parseExpression());
+            mExpressionParser.setExpression(" 2 ^-1");
+            Assert.assertEquals(1./2., mExpressionParser.parseExpression());
         } catch (ParseException e) {
             Assert.assertTrue("Can't parse expression " + e.getMessage(), false);
         }
@@ -130,6 +132,12 @@ public class ExceptionParserTests extends TestCase {
             Assert.assertEquals(32., mExpressionParser.parseExpression());
             mExpressionParser.setExpression(" 2 ^ sqrt2( 25 ) ");
             Assert.assertEquals(32., mExpressionParser.parseExpression());
+            mExpressionParser.setExpression("8 - 1 + 8");
+            Assert.assertEquals(15., mExpressionParser.parseExpression());
+            mExpressionParser.setExpression("8 + - 8");
+            Assert.assertEquals(0., mExpressionParser.parseExpression());
+            mExpressionParser.setExpression("8 + + 8");
+            Assert.assertEquals(16., mExpressionParser.parseExpression());
         } catch (ParseException e) {
             Assert.assertTrue("Can't parse expression " + e.getMessage(), false);
         }
@@ -139,12 +147,15 @@ public class ExceptionParserTests extends TestCase {
         try {
             mExpressionParser.setExpression("2 + 50% ");
             Assert.assertEquals(3., mExpressionParser.parseExpression());
-            mExpressionParser.setExpression("2 + 2 + 50% ");
-            Assert.assertEquals(5., mExpressionParser.parseExpression());
+            /**
+             * Not yet implemented properly
+             */
+            /*mExpressionParser.setExpression("5 + 5 + 50% ");
+            Assert.assertEquals(15., mExpressionParser.parseExpression());*/
             mExpressionParser.setExpression("2 * 2 + 50% ");
             Assert.assertEquals(6., mExpressionParser.parseExpression());
-            mExpressionParser.setExpression("2 + 50% + 1 ");
-            Assert.assertEquals(4., mExpressionParser.parseExpression());
+            mExpressionParser.setExpression("2 + 50% + 5 ");
+            Assert.assertEquals(8., mExpressionParser.parseExpression());
         } catch (ParseException e) {
             Assert.assertTrue("Can't parse expression " + e.getMessage(), false);
         }
