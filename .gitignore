@@ -20,3 +20,5 @@ ExpressionParser/out/test
 .idea
 # Idea files #
 *.iml
+out
+src/META-INF
