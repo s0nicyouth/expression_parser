@@ -161,6 +161,31 @@ public class ExceptionParserTests extends TestCase {
         }
     }
 
+    public void testVariables() {
+        try {
+            mExpressionParser.setExpression("x + 1");
+            mExpressionParser.setVariable('x', "1");
+            Assert.assertEquals(2., mExpressionParser.parseExpression());
+            mExpressionParser.setExpression("1 + x");
+            mExpressionParser.setVariable('x', "1");
+            Assert.assertEquals(2., mExpressionParser.parseExpression());
+            mExpressionParser.setExpression("x");
+            mExpressionParser.setVariable('x', "1");
+            Assert.assertEquals(1., mExpressionParser.parseExpression());
+            mExpressionParser.setExpression("x + 3*(x + 1)");
+            mExpressionParser.setVariable('x', "1");
+            Assert.assertEquals(7., mExpressionParser.parseExpression());
+            mExpressionParser.setExpression("x + 3^x");
+            mExpressionParser.setVariable('x', "2");
+            Assert.assertEquals(11., mExpressionParser.parseExpression());
+            mExpressionParser.setExpression("x + 3^(x+1)");
+            mExpressionParser.setVariable('x', "2");
+            Assert.assertEquals(29., mExpressionParser.parseExpression());
+        } catch (ParseException e) {
+            Assert.fail("Can't parse expression " + e.getMessage());
+        }
+    }
+
     public void testWrongExpressions() {
         try {
             mExpressionParser.setExpression("sqrt (25)");

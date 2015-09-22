@@ -1,11 +1,14 @@
 package com.syouth.parser;
 
+import java.util.HashMap;
+
 /**
  * Created by syouth on 06.08.15.
  */
 public class ExpressionParser {
     private CharSequence mExpression;
     private int mCurexpressionPos = -1;
+    private HashMap<Character, String> mVarToValMap = new HashMap<>();
 
     public void setExpression(CharSequence mExpression) {
         this.mExpression = mExpression;
@@ -41,8 +44,8 @@ public class ExpressionParser {
      * Grammar:
      * expression = ["+"|"-"] term [{['+'|'-'] expression['%'['+'|'-' expression]]}]
      * term = ['+'|'-']factor ['^' power][{('*'|'/') term['%']}]
-     * power = ['+'|'-'](number | '('expression')')['^'power]
-     * factor = number | '('expression')' | 'sqrt{digit}('expression')'
+     * power = ['+'|'-'](variable | number | '('expression')')['^'power]
+     * factor = number | '('expression')' | 'sqrt{digit}('expression')' | variable
      */
     private double parseExpressionInternal() throws ParseException {
         double answer = 0;
@@ -98,6 +101,9 @@ public class ExpressionParser {
             }
         } else if (isNextKnownFunction()) {
             answer = parseKnownFunction();
+        } else if (isNextCharVariable()) {
+            char c = nextChar();
+            return Double.valueOf(mVarToValMap.get(c));
         } else  {
             throw new ParseException("Wrong power at " + mCurexpressionPos);
         }
@@ -164,6 +170,15 @@ public class ExpressionParser {
         return Double.valueOf(builder.toString());
     }
 
+    private boolean isNextCharVariable() {
+        int i = mCurexpressionPos + 1;
+        if (i >= mExpression.length()) {
+            return false;
+        }
+
+        return mVarToValMap.containsKey(mExpression.charAt(i));
+    }
+
     private double parseFactor() throws ParseException {
         eatSpaces();
         if (isOver()) {
@@ -190,6 +205,9 @@ public class ExpressionParser {
             }
         } else if (isNextKnownFunction()) {
             return sign * parseKnownFunction();
+        } else if (isNextCharVariable()) {
+            char c = nextChar();
+            return Double.valueOf(mVarToValMap.get(c));
         } else {
             throw new ParseException("Unexpected factor at " + mCurexpressionPos);
         }
@@ -265,5 +283,9 @@ public class ExpressionParser {
 
     private boolean checkIfNextDigitPlusOrMinus() {
         return checkIfNextCharOneOf(new char[] {'+', '-'});
+    }
+
+    public void setVariable(char varName, String value) {
+        mVarToValMap.put(varName, value);
     }
 }
