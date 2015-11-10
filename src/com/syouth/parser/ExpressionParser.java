@@ -53,12 +53,12 @@ public class ExpressionParser {
         if (checkIfNextDigitPlusOrMinus()) {
             Character nextChar = nextChar();
             if (nextChar != null && nextChar.equals('-')) {
-                answer = -1 * parseTerm();
+                answer = -1 * parseTerm(null);
             } else {
-                answer = parseTerm();
+                answer = parseTerm(null);
             }
         } else {
-            answer = parseTerm();
+            answer = parseTerm(null);
         }
         double expressionVal = 0.;
         if (!isOver() &&
@@ -124,7 +124,7 @@ public class ExpressionParser {
         return checkIfNextCharOneOf(new char[] {'^'});
     }
 
-    private double parseTerm() throws ParseException {
+    private double parseTerm(Double numToDiv) throws ParseException {
         double answer = 0;
         eatSpaces();
         if (isOver()) {
@@ -137,13 +137,16 @@ public class ExpressionParser {
             answer = Math.pow(answer, parsePower());
         }
         eatSpaces();
+        if (numToDiv != null) {
+            answer = numToDiv / answer;
+        }
         if (chechNextCharMultOrDiv()) {
             switch (nextChar()) {
                 case '*':
-                    answer *= parseTerm();
+                    answer *= parseTerm(null);
                     break;
                 case '/':
-                    answer /= parseTerm();
+                    answer = parseTerm(answer);
                     break;
             }
         }
