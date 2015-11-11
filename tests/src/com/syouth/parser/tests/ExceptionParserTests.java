@@ -1,7 +1,9 @@
 package com.syouth.parser.tests;
 
 import com.syouth.parser.ExpressionParser;
+import com.syouth.parser.FunctionDescription;
 import com.syouth.parser.ParseException;
+import funcs.*;
 import junit.framework.Assert;
 import junit.framework.TestCase;
 
@@ -199,6 +201,29 @@ public class ExceptionParserTests extends TestCase {
             Assert.assertTrue(false);
         } catch (ParseException e) {
 
+        }
+    }
+
+    public void testUserFunctions() {
+        try {
+            mExpressionParser.addUserFunction(new FunctionDescription<Double, Double>("sin", new SinFunc()));
+            mExpressionParser.addUserFunction(new FunctionDescription<Double, Double>("ln", new LnFunc()));
+            mExpressionParser.addUserFunction(new FunctionDescription<Double, Double>("log", new LogFunc()));
+            mExpressionParser.addUserFunction(new FunctionDescription<Double, Double>("cos", new CosFunc()));
+            mExpressionParser.addUserFunction(new FunctionDescription<Double, Double>("tan", new TanFunc()));
+            mExpressionParser.addUserFunction(new FunctionDescription<Double, Double>("ctn", new CtnFunc()));
+            mExpressionParser.setExpression("sin (90)");
+            Assert.assertEquals(1., mExpressionParser.parseExpression());
+            mExpressionParser.setExpression("cos (90)");
+            Assert.assertEquals(0., mExpressionParser.parseExpression());
+            mExpressionParser.setExpression("tan (0)");
+            Assert.assertEquals(0., mExpressionParser.parseExpression());
+            mExpressionParser.setExpression("ln(1)");
+            Assert.assertEquals(0., mExpressionParser.parseExpression());
+            mExpressionParser.setExpression("log(10)");
+            Assert.assertEquals(1., mExpressionParser.parseExpression());
+        } catch (ParseException e) {
+            Assert.fail(e.getMessage());
         }
     }
 }

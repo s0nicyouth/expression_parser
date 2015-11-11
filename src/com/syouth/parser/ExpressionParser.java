@@ -1,6 +1,9 @@
 package com.syouth.parser;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashMap;
+import java.util.LinkedList;
 
 /**
  * Created by syouth on 06.08.15.
@@ -9,6 +12,7 @@ public class ExpressionParser {
     private CharSequence mExpression;
     private int mCurexpressionPos = -1;
     private HashMap<Character, String> mVarToValMap = new HashMap<>();
+    private final LinkedList<FunctionDescription<Double, Double>> mUserFunctions = new LinkedList<>();
 
     public void setExpression(CharSequence mExpression) {
         this.mExpression = mExpression;
@@ -37,7 +41,20 @@ public class ExpressionParser {
 
     public double parseExpression() throws ParseException {
         mCurexpressionPos = -1;
-        return parseExpressionInternal();
+        double ans = parseExpressionInternal();
+        try {
+            return new BigDecimal(ans).setScale(5, RoundingMode.HALF_UP).doubleValue();
+        } catch (NumberFormatException e) {
+            throw new ParseException(e.getMessage());
+        }
+    }
+
+    public void addUserFunction(FunctionDescription<Double, Double> functionDescription) {
+        mUserFunctions.add(functionDescription);
+    }
+
+    public void removeFunction(FunctionDescription<Double, Double> functionDescription) {
+        mUserFunctions.remove(functionDescription);
     }
 
     /**
@@ -219,6 +236,7 @@ public class ExpressionParser {
     private double parseRoot() throws ParseException {
         eatNChars(4);
         double p = parseNumber();
+        eatSpaces();
         Character bracket = nextChar();
         if (bracket == null ||
                 !bracket.equals('(')) {
@@ -234,16 +252,59 @@ public class ExpressionParser {
         }
     }
 
+    private double parseUserFunction(FunctionDescription<Double, Double> functionDescription)
+            throws ParseException {
+        String funcName = functionDescription.getmFunctionName();
+        eatNChars(funcName.length());
+        eatSpaces();
+        Character bracket = nextChar();
+        if (bracket == null ||
+                !bracket.equals('(')) {
+            throw new ParseException(
+                    "Unexpected symbol at " + mCurexpressionPos + ". ( expected");
+        }
+        double expr = parseExpressionInternal();
+        if (isOver() ||
+                !nextChar().equals(')')) {
+            throw new ParseException("No closing bracket at " + mCurexpressionPos);
+        } else {
+            return functionDescription.getmEvaluator().apply(expr);
+        }
+    }
+
     private double parseKnownFunction() throws ParseException {
+        FunctionDescription<Double, Double> functionDescription = compareToUserFunctions();
         if (isNextRoot()) {
             return parseRoot();
+        } else if (functionDescription != null) {
+            return parseUserFunction(functionDescription);
         } else {
             throw new ParseException("No known function at " + mCurexpressionPos);
         }
     }
 
     private boolean isNextKnownFunction() {
-        return isNextRoot();
+        return isNextRoot() || compareToUserFunctions() != null;
+    }
+
+    private FunctionDescription<Double, Double> compareToUserFunctions() {
+        for (FunctionDescription<Double, Double> f : mUserFunctions) {
+            if (compareToFunction(f)) {
+                return f;
+            }
+        }
+
+        return null;
+    }
+
+    private boolean compareToFunction(FunctionDescription<Double, Double> function) {
+        String funcName = function.getmFunctionName();
+        int i = mCurexpressionPos + 1;
+        if (i >= mExpression.length() || i + funcName.length() >= mExpression.length()) {
+            return false;
+        }
+        return mExpression.subSequence(i, i + funcName.length()).
+                equals(funcName);
     }
 
     private boolean isNextRoot() {
