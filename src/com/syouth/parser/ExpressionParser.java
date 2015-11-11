@@ -227,7 +227,11 @@ public class ExpressionParser {
             return sign * parseKnownFunction();
         } else if (isNextCharVariable()) {
             char c = nextChar();
-            return Double.valueOf(mVarToValMap.get(c));
+            try {
+                return Double.valueOf(mVarToValMap.get(c));
+            } catch (NumberFormatException e) {
+                throw new ParseException(e.getMessage());
+            }
         } else {
             throw new ParseException("Unexpected factor at " + mCurexpressionPos);
         }
