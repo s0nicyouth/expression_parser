@@ -13,6 +13,11 @@ public class ExpressionParser {
     private int mCurexpressionPos = -1;
     private HashMap<Character, String> mVarToValMap = new HashMap<>();
     private final LinkedList<FunctionDescription<Double, Double>> mUserFunctions = new LinkedList<>();
+    private int mPrecision = 3;
+
+    public void setPrecision(int val) {
+        mPrecision = val;
+    }
 
     public void setExpression(CharSequence mExpression) {
         this.mExpression = mExpression;
@@ -43,7 +48,7 @@ public class ExpressionParser {
         mCurexpressionPos = -1;
         double ans = parseExpressionInternal();
         try {
-            return new BigDecimal(ans).setScale(5, RoundingMode.HALF_UP).doubleValue();
+            return new BigDecimal(ans).setScale(mPrecision, RoundingMode.HALF_UP).doubleValue();
         } catch (NumberFormatException e) {
             throw new ParseException(e.getMessage());
         }
