@@ -212,6 +212,9 @@ public class ExceptionParserTests extends TestCase {
             mExpressionParser.addUserFunction(new FunctionDescription<Double, Double>("cos", new CosFunc()));
             mExpressionParser.addUserFunction(new FunctionDescription<Double, Double>("tan", new TanFunc()));
             mExpressionParser.addUserFunction(new FunctionDescription<Double, Double>("ctn", new CtnFunc()));
+            mExpressionParser.addUserFunction(new FunctionDescription<Double, Double>("acos", new ACosFunc()));
+            mExpressionParser.addUserFunction(new FunctionDescription<Double, Double>("asin", new ASinFunc()));
+            mExpressionParser.addUserFunction(new FunctionDescription<Double, Double>("atan", new ATanFunc()));
             mExpressionParser.setExpression("sin (90)");
             Assert.assertEquals(1., mExpressionParser.parseExpression());
             mExpressionParser.setExpression("cos (90)");
@@ -222,6 +225,12 @@ public class ExceptionParserTests extends TestCase {
             Assert.assertEquals(0., mExpressionParser.parseExpression());
             mExpressionParser.setExpression("log(10)");
             Assert.assertEquals(1., mExpressionParser.parseExpression());
+            mExpressionParser.setExpression("asin(1)");
+            Assert.assertEquals(90., mExpressionParser.parseExpression());
+            mExpressionParser.setExpression("acos(0)");
+            Assert.assertEquals(90., mExpressionParser.parseExpression());
+            mExpressionParser.setExpression("atan(1)");
+            Assert.assertEquals(45., mExpressionParser.parseExpression());
         } catch (ParseException e) {
             Assert.fail(e.getMessage());
         }
